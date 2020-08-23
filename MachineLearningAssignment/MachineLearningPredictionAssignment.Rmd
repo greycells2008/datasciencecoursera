@@ -1,0 +1,115 @@
+---
+title: "Prediction Assignment"
+output: html_document
+---
+
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. 
+In this project, in order to quantify how well an activity is done, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. 
+
+## Data
+
+The training data for this project are available here:
+  
+  https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+  
+  https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. 
+
+## Installing Packages
+```{r pack,warning=FALSE,message=FALSE}
+IscaretInstalled <- require("caret")
+if(!IscaretInstalled){
+  install.packages("caret")
+  library("caret")
+}
+
+IsrandomForestInstalled <- require("randomForest")
+if(!IsrandomForestInstalled){
+  install.packages("randomForest")
+  library("randomForest")
+}
+
+IsRpartInstalled <- require("rpart")        
+if(!IsRpartInstalled){
+  install.packages("rpart")
+  library("rpart")
+}
+
+IsRpartPlotInstalled <- require("rpart.plot")        
+if(!IsRpartPlotInstalled){
+  install.packages("rpart.plot")
+  library("rpart.plot")
+}
+
+#Set seed for reproducability
+set.seed(20000)
+```
+
+## Data Processing
+```{r process}
+#Load the data and delete missing values
+trainUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"   
+testUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+
+training <- read.csv(url(trainUrl), na.strings=c("NA","#DIV/0!",""))  
+testing <- read.csv(url(testUrl), na.strings=c("NA","#DIV/0!",""))
+
+#Remove variables with near zero variance
+training<-training[,colSums(is.na(training)) == 0]
+testing <-testing[,colSums(is.na(testing)) == 0]
+
+#Remove columns that are not predictors, which are the the seven first columns
+training   <-training[,-c(1:7)]
+testing <-testing[,-c(1:7)]
+
+
+```
+
+## Cross-validation
+```{r cross}
+#In order to get out-of-sample errors, split the training data in training (75%) and testing (25%) data) subsets:
+inTrain <- createDataPartition(y=training$classe, p=0.75, list=FALSE)    
+CrossTraining <- training[inTrain, ]
+CrossTesting <- training[-inTrain, ]  
+dim(CrossTraining)
+dim(CrossTesting)
+```
+
+## Prediction Models
+```{r model}
+#DECISION TREE
+#Fit model on CrossTraining data
+fitDTree <- rpart(classe ~ ., data=CrossTraining, method="class")
+
+#Use model to predict class in validation set (CrossTesting)
+predictionDTree <- predict(fitDTree, CrossTesting, type = "class")
+
+#Plotting the decision tree
+prp(fitDTree)
+
+#Estimate the errors of the prediction algorithm in the Decision Tree model
+confusionMatrix(CrossTesting$classe, predictionDTree)
+
+#RANDOM FOREST
+#Fit model on CrossTraining data
+fitRForest <- randomForest(classe ~ ., data=CrossTraining, method="class")
+
+#Use model to predict class in validation set (CrossTesting)
+predictionRForest <- predict(fitRForest, CrossTesting, type = "class")
+
+#Estimate the errors of the prediction algorithm in the Random Forest
+confusionMatrix(CrossTesting$classe, predictionRForest)
+```
+
+# Testing the model to predict 20 test cases
+```{r quiz}
+# Perform prediction
+predictSubmission <- predict(fitRForest, testing, type="class")
+predictSubmission
+
+```
