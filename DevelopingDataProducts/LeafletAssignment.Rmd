@@ -1,0 +1,32 @@
+---
+output: html_document
+---
+
+## This is a map of New Delhi dated 14 October 2020
+
+
+```{r message=FALSE,warning=FALSE,echo=FALSE}
+library(leaflet)
+
+DelhiCoords <- data.frame(lat=c(28.6143,28.6172,28.67386,28.6129,28.6562),
+                          lng=c(77.1994,77.2082,77.21183,77.2295,77.2410))
+
+DelhiIcon <- makeIcon(
+iconUrl = "https://www.vandemataram.com/html/natsys/images/emblem.gif",
+iconWidth = 31*215/230, iconHeight = 31,
+iconAnchorX = 31*215/230/2, iconAnchorY = 16
+)
+
+DelhiSites <- c(
+"<a href='https://en.wikipedia.org/wiki/Rashtrapati_Bhavan'>Rashtrapati Bhawan</a>",
+"<a href='https://en.wikipedia.org/wiki/Parliament_House_(India)'>Sansad Bhawan</a>",
+"<a href='https://en.wikipedia.org/wiki/Lion_Capital_of_Ashoka'>Ashok Stambh</a>",
+"<a href='http://delhitourism.gov.in/delhitourism/tourist_place/india_gate.jsp'>India Gate</a>",
+"<a href='https://whc.unesco.org/en/list/231/'>Red Fort</a>"
+)
+
+Delhi_map <- DelhiCoords %>% leaflet()%>% setView(lng = 77.1994, lat = 28.6143, zoom = 12) %>% addTiles() %>% addMarkers(icon=DelhiIcon, popup = DelhiSites)
+
+Delhi_map
+```
+
